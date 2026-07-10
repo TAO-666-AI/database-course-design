@@ -17,7 +17,7 @@ def my_favorites(user=Depends(current_user), db=Depends(get_db)):
                    s.id, s.name, s.category, s.description, s.location, s.image_url
             FROM favorites f
             JOIN spots s ON f.spot_id=s.id
-            WHERE f.user_id=%s AND s.status='active'
+            WHERE f.user_id=%s
             ORDER BY f.created_at DESC
             """,
             (user["id"],),
@@ -30,7 +30,7 @@ def my_favorites(user=Depends(current_user), db=Depends(get_db)):
 def add_favorite(spot_id: int, user=Depends(current_user), db=Depends(get_db)):
     try:
         with db.cursor() as cursor:
-            cursor.execute("SELECT id FROM spots WHERE id=%s AND status='active'", (spot_id,))
+            cursor.execute("SELECT id FROM spots WHERE id=%s", (spot_id,))
             if not cursor.fetchone():
                 return err(40401, "景点不存在")
             cursor.execute("INSERT INTO favorites(user_id, spot_id) VALUES(%s,%s)", (user["id"], spot_id))

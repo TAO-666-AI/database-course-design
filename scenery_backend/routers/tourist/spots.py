@@ -8,7 +8,7 @@ router = APIRouter(prefix="/api/spots", tags=["景点"])
 
 @router.get("")
 def list_spots(keyword: str = "", category: str = "", db=Depends(get_db)):
-    sql = "SELECT * FROM spots WHERE status='active'"
+    sql = "SELECT * FROM spots WHERE 1=1"
     params = []
     if keyword:
         sql += " AND (name LIKE %s OR description LIKE %s OR location LIKE %s)"
@@ -31,7 +31,7 @@ def spot_categories(db=Depends(get_db)):
             """
             SELECT DISTINCT category
             FROM spots
-            WHERE status='active' AND category IS NOT NULL AND category <> ''
+            WHERE category IS NOT NULL AND category <> ''
             ORDER BY category ASC
             """
         )
@@ -42,7 +42,7 @@ def spot_categories(db=Depends(get_db)):
 @router.get("/{spot_id}")
 def spot_detail(spot_id: int, db=Depends(get_db)):
     with db.cursor() as cursor:
-        cursor.execute("SELECT * FROM spots WHERE id=%s AND status='active'", (spot_id,))
+        cursor.execute("SELECT * FROM spots WHERE id=%s", (spot_id,))
         row = cursor.fetchone()
     if not row:
         return err(40401, "景点不存在")

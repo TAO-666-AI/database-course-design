@@ -13,4 +13,3 @@ class SpotForm(BaseModel):
     ticket_price: Decimal = Field(0, ge=0)
     recommended_duration: Optional[str] = Field(None, max_length=50)
     image_url: Optional[str] = Field(None, max_length=255)
-    status: str = "active"

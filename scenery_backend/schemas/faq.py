@@ -9,4 +9,3 @@ class FAQForm(BaseModel):
     category: Optional[str] = Field(None, max_length=50)
     keywords: Optional[str] = Field(None, max_length=255)
     sort_order: int = 0
-    status: str = "active"

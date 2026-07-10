@@ -9,7 +9,7 @@ router = APIRouter(prefix="/api/faqs", tags=["FAQ"])
 
 @router.get("")
 def list_faqs(category: str = "", keyword: str = "", db=Depends(get_db)):
-    sql = "SELECT id, question, answer, category, keywords, sort_order FROM faqs WHERE status='active'"
+    sql = "SELECT id, question, answer, category, keywords, sort_order FROM faqs WHERE 1=1"
     params = []
     if category:
         sql += " AND category=%s"

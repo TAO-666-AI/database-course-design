@@ -3,22 +3,19 @@ from fastapi import APIRouter, Depends
 from db.connection import get_db
 from dependencies.auth import current_admin
 from schemas.faq import FAQForm
-from utils.response import check_choice, clean_rows, err, ok
+from utils.response import clean_rows, err, ok
 
 router = APIRouter(prefix="/api/admin/faqs", tags=["管理员-FAQ管理"])
 
 
 @router.get("")
-def admin_faqs(keyword: str = "", status: str = "", _=Depends(current_admin), db=Depends(get_db)):
+def admin_faqs(keyword: str = "", _=Depends(current_admin), db=Depends(get_db)):
     sql = "SELECT * FROM faqs WHERE 1=1"
     params = []
     if keyword:
         sql += " AND (question LIKE %s OR answer LIKE %s OR keywords LIKE %s)"
         like = f"%{keyword}%"
         params.extend([like, like, like])
-    if status:
-        sql += " AND status=%s"
-        params.append(status)
     sql += " ORDER BY sort_order ASC, id DESC"
     with db.cursor() as cursor:
         cursor.execute(sql, params)
@@ -28,12 +25,11 @@ def admin_faqs(keyword: str = "", status: str = "", _=Depends(current_admin), db
 
 @router.post("")
 def admin_create_faq(form: FAQForm, admin=Depends(current_admin), db=Depends(get_db)):
-    check_choice(form.status, {"active", "inactive"}, "status")
     try:
         with db.cursor() as cursor:
             cursor.execute(
-                "INSERT INTO faqs(question, answer, category, keywords, sort_order, status, created_by) VALUES(%s,%s,%s,%s,%s,%s,%s)",
-                (form.question, form.answer, form.category, form.keywords, form.sort_order, form.status, admin["id"]),
+                "INSERT INTO faqs(question, answer, category, keywords, sort_order, created_by) VALUES(%s,%s,%s,%s,%s,%s)",
+                (form.question, form.answer, form.category, form.keywords, form.sort_order, admin["id"]),
             )
             item_id = cursor.lastrowid
         db.commit()
@@ -45,12 +41,11 @@ def admin_create_faq(form: FAQForm, admin=Depends(current_admin), db=Depends(get
 
 @router.put("/{faq_id}")
 def admin_update_faq(faq_id: int, form: FAQForm, _=Depends(current_admin), db=Depends(get_db)):
-    check_choice(form.status, {"active", "inactive"}, "status")
     try:
         with db.cursor() as cursor:
             cursor.execute(
-                "UPDATE faqs SET question=%s, answer=%s, category=%s, keywords=%s, sort_order=%s, status=%s WHERE id=%s",
-                (form.question, form.answer, form.category, form.keywords, form.sort_order, form.status, faq_id),
+                "UPDATE faqs SET question=%s, answer=%s, category=%s, keywords=%s, sort_order=%s WHERE id=%s",
+                (form.question, form.answer, form.category, form.keywords, form.sort_order, faq_id),
             )
             if cursor.rowcount == 0:
                 return err(40401, "FAQ 不存在")

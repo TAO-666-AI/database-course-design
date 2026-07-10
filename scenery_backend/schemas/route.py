@@ -9,5 +9,4 @@ class RouteForm(BaseModel):
     description: Optional[str] = None
     difficulty: str = "easy"
     duration_hours: Decimal = Field(1, ge=0)
-    status: str = "active"
-    spot_ids: list[int] = []
+    spot_ids: list[int] = Field(default_factory=list)

@@ -18,6 +18,12 @@ ROUTE_DESCRIPTIONS = {
     "中山陵深度游（4-5小时）": "适合时间充足、希望深度了解景区的游客，串联中山陵、音乐台、流徽榭（水榭）、行健亭和光化亭。路线覆盖核心景点与周边节点，内容更完整，能够体现景区历史文化、自然环境和游线层次。",
 }
 
+DEFAULT_ROUTE_SPOTS = {
+    "中山陵轻松游（1-2小时）": ["中山陵", "音乐台"],
+    "中山陵普通游（2-3小时）": ["中山陵", "音乐台", "流徽榭（水榭）"],
+    "中山陵深度游（4-5小时）": ["中山陵", "音乐台", "流徽榭（水榭）", "行健亭", "光化亭"],
+}
+
 
 def reset_old_sample_data(cursor):
     """如果检测到早期示例景区数据，则清理示例业务数据，重新写入南京中山陵数据。"""
@@ -41,6 +47,24 @@ def sync_default_descriptions(cursor):
         cursor.execute("UPDATE spots SET description=%s WHERE name=%s", (description, name))
     for name, description in ROUTE_DESCRIPTIONS.items():
         cursor.execute("UPDATE routes SET description=%s WHERE name=%s", (description, name))
+
+
+def sync_default_route_spots(cursor):
+    cursor.execute("SELECT id, name FROM spots WHERE name IN (%s,%s,%s,%s,%s)", tuple(ZHONGSHANLING_SPOTS))
+    spot_map = {row["name"]: row["id"] for row in cursor.fetchall()}
+    cursor.execute(
+        "SELECT id, name FROM routes WHERE name IN (%s,%s,%s)",
+        tuple(DEFAULT_ROUTE_SPOTS.keys()),
+    )
+    for route in cursor.fetchall():
+        cursor.execute("DELETE FROM route_spots WHERE route_id=%s", (route["id"],))
+        for index, spot_name in enumerate(DEFAULT_ROUTE_SPOTS[route["name"]], start=1):
+            spot_id = spot_map.get(spot_name)
+            if spot_id:
+                cursor.execute(
+                    "INSERT INTO route_spots(route_id, spot_id, sort_order) VALUES(%s,%s,%s)",
+                    (route["id"], spot_id, index),
+                )
 
 
 def seed_data(cursor):
@@ -125,21 +149,21 @@ def seed_data(cursor):
                 ROUTE_DESCRIPTIONS["中山陵轻松游（1-2小时）"],
                 "easy",
                 1.5,
-                ["中山陵", "音乐台"],
+                DEFAULT_ROUTE_SPOTS["中山陵轻松游（1-2小时）"],
             ),
             (
                 "中山陵普通游（2-3小时）",
                 ROUTE_DESCRIPTIONS["中山陵普通游（2-3小时）"],
                 "medium",
                 2.5,
-                ["中山陵", "音乐台", "流徽榭（水榭）"],
+                DEFAULT_ROUTE_SPOTS["中山陵普通游（2-3小时）"],
             ),
             (
                 "中山陵深度游（4-5小时）",
                 ROUTE_DESCRIPTIONS["中山陵深度游（4-5小时）"],
                 "hard",
                 4.5,
-                ["中山陵", "音乐台", "流徽榭（水榭）", "行健亭", "光化亭"],
+                DEFAULT_ROUTE_SPOTS["中山陵深度游（4-5小时）"],
             ),
         ]
         for name, desc, difficulty, hours, spot_names in route_defs:
@@ -176,3 +200,4 @@ def seed_data(cursor):
             )
 
     sync_default_descriptions(cursor)
+    sync_default_route_spots(cursor)

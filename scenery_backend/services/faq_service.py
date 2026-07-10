@@ -8,7 +8,7 @@ def match_faq(cursor, question: str) -> Optional[dict]:
         return None
 
     cursor.execute(
-        "SELECT id, question, answer, category, keywords FROM faqs WHERE status='active' AND question=%s LIMIT 1",
+        "SELECT id, question, answer, category, keywords FROM faqs WHERE question=%s LIMIT 1",
         (q,),
     )
     exact = cursor.fetchone()
@@ -20,7 +20,7 @@ def match_faq(cursor, question: str) -> Optional[dict]:
     cursor.execute(
         """
         SELECT id, question, answer, category, keywords FROM faqs
-        WHERE status='active' AND (question LIKE %s OR answer LIKE %s OR keywords LIKE %s)
+        WHERE question LIKE %s OR answer LIKE %s OR keywords LIKE %s
         ORDER BY sort_order ASC LIMIT 1
         """,
         (like, like, like),
@@ -30,7 +30,7 @@ def match_faq(cursor, question: str) -> Optional[dict]:
         row["score"] = 80
         return row
 
-    cursor.execute("SELECT id, question, answer, category, keywords FROM faqs WHERE status='active'")
+    cursor.execute("SELECT id, question, answer, category, keywords FROM faqs")
     candidates = []
     for faq in cursor.fetchall():
         score = SequenceMatcher(None, q, faq["question"]).ratio() * 60

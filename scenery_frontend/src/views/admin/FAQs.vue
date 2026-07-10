@@ -44,7 +44,7 @@ const visible = ref(false)
 const editingId = ref(null)
 const items = ref([])
 const query = reactive({ keyword: '' })
-const empty = () => ({ question: '', answer: '', category: '', keywords: '', sort_order: 0, status: 'active' })
+const empty = () => ({ question: '', answer: '', category: '', keywords: '', sort_order: 0 })
 const form = reactive(empty())
 const load = async () => {
   loading.value = true
